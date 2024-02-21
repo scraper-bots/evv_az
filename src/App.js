@@ -1,8 +1,8 @@
+// App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
 import Navbar from './components/Navbar';
-import HomePage from './components/HomePage';
+import HomePage from './components/HomePage/HomePage';
 import ShopPage from './components/ShopPage';
 import ShoppingCart from './components/ShoppingCart';
 
