@@ -11,4 +11,8 @@ services:
       # Or set NUM_PAGES to scrape specific number of pages
       - SCRAPE_ALL=true
       # - NUM_PAGES=3
+      # Batch size for concurrent processing (default 100)
+      - BATCH_SIZE=100
     restart: "no"
+    # Increase memory limit for large scraping jobs
+    mem_limit: 2g

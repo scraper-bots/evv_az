@@ -52,6 +52,7 @@ python scraper.py
 
 - `SCRAPE_ALL=true` - Scrape all available pages (default)
 - `NUM_PAGES=10` - Scrape specific number of pages
+- `BATCH_SIZE=100` - Number of listings to process concurrently (default 100, lower if OOM)
 
 ### Docker Configuration
 
@@ -61,12 +62,13 @@ Edit `docker-compose.yml`:
 environment:
   - SCRAPE_ALL=true  # Scrape all pages
   # - NUM_PAGES=5    # Or scrape 5 pages
+  - BATCH_SIZE=100   # Process 100 listings at a time
 ```
 
 ### Local Configuration
 
 ```bash
-# Scrape all pages (default)
+# Scrape all pages (default, batch size 100)
 python scraper.py
 
 # Scrape specific number of pages
@@ -74,7 +76,17 @@ NUM_PAGES=5 python scraper.py
 
 # Scrape only 3 pages
 SCRAPE_ALL=false NUM_PAGES=3 python scraper.py
+
+# Adjust batch size for memory constraints
+BATCH_SIZE=50 python scraper.py
 ```
+
+## Memory Management
+
+For large scraping jobs (690 pages = ~16,545 listings):
+- **Batch processing**: Listings are processed in batches (default 100)
+- **Docker memory limit**: 2GB set in docker-compose.yml
+- **Reduce batch size** if you encounter OOM errors: `BATCH_SIZE=50`
 
 ## Output Fields
 

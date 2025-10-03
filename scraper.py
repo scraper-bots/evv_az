@@ -261,12 +261,13 @@ class EvvAzScraper:
 
         return total_pages
 
-    async def scrape_pages(self, num_pages: int = None, scrape_all: bool = False):
+    async def scrape_pages(self, num_pages: int = None, scrape_all: bool = False, batch_size: int = 100):
         """Scrape multiple pages
 
         Args:
             num_pages: Number of pages to scrape (if None and scrape_all=True, scrapes all)
             scrape_all: If True, scrapes all available pages
+            batch_size: Number of listings to scrape concurrently (default 100)
         """
         connector = aiohttp.TCPConnector(limit=10)
         timeout = aiohttp.ClientTimeout(total=60)
@@ -301,18 +302,30 @@ class EvvAzScraper:
             print(f"Total listings found: {len(all_listing_urls)}")
             print(f"{'='*60}\n")
 
-            # Now scrape each listing
-            detail_tasks = []
-            for idx, url in enumerate(all_listing_urls, 1):
-                detail_tasks.append(
-                    self.scrape_listing_details(session, url, idx, len(all_listing_urls))
-                )
+            # Process listings in batches to avoid OOM
+            total_listings = len(all_listing_urls)
 
-            # Wait for all detail scrapes to complete
-            all_details = await asyncio.gather(*detail_tasks)
+            for batch_start in range(0, total_listings, batch_size):
+                batch_end = min(batch_start + batch_size, total_listings)
+                batch_urls = all_listing_urls[batch_start:batch_end]
 
-            # Filter out None values
-            self.listings = [d for d in all_details if d is not None]
+                print(f"Processing batch {batch_start//batch_size + 1}/{(total_listings + batch_size - 1)//batch_size} (listings {batch_start+1}-{batch_end})")
+
+                # Scrape this batch
+                detail_tasks = []
+                for idx, url in enumerate(batch_urls, start=batch_start + 1):
+                    detail_tasks.append(
+                        self.scrape_listing_details(session, url, idx, total_listings)
+                    )
+
+                # Wait for batch to complete
+                batch_details = await asyncio.gather(*detail_tasks)
+
+                # Filter out None values and add to listings
+                valid_details = [d for d in batch_details if d is not None]
+                self.listings.extend(valid_details)
+
+                print(f"Batch completed: {len(valid_details)}/{len(batch_urls)} successful\n")
 
         return self.listings
 
@@ -348,16 +361,17 @@ async def main():
     # Check environment variable for scraping mode
     scrape_all = os.getenv('SCRAPE_ALL', 'true').lower() == 'true'
     num_pages = os.getenv('NUM_PAGES')
+    batch_size = int(os.getenv('BATCH_SIZE', '100'))
 
     if num_pages:
         # If NUM_PAGES is specified, use it
-        await scraper.scrape_pages(num_pages=int(num_pages))
+        await scraper.scrape_pages(num_pages=int(num_pages), batch_size=batch_size)
     elif scrape_all:
         # Otherwise scrape all pages
-        await scraper.scrape_pages(scrape_all=True)
+        await scraper.scrape_pages(scrape_all=True, batch_size=batch_size)
     else:
         # Default to 3 pages
-        await scraper.scrape_pages(num_pages=3)
+        await scraper.scrape_pages(num_pages=3, batch_size=batch_size)
 
     # Save to CSV
     scraper.save_to_csv()
