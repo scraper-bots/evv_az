@@ -1,70 +1,114 @@
-# Getting Started with Create React App
+# EVV.AZ Real Estate Scraper
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Asynchronous web scraper for evv.az real estate listings with Docker support.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- ✅ Async scraping using `aiohttp` and `asyncio`
+- ✅ Pagination support (configurable number of pages)
+- ✅ Phone number extraction via API
+- ✅ CSV export
+- ✅ Docker containerization
+- ✅ Rate limiting and polite scraping
 
-### `npm start`
+## Quick Start
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Using Docker (Recommended)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+1. Build and run:
+```bash
+docker-compose up --build
+```
 
-### `npm test`
+2. Find output in `./output/evv_az_listings.csv`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Using Docker without docker-compose
 
-### `npm run build`
+1. Build the image:
+```bash
+docker build -t evv-scraper .
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+2. Run the container:
+```bash
+docker run -v $(pwd)/output:/app/output evv-scraper
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Local Installation
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-### `npm run eject`
+2. Run the scraper:
+```bash
+python scraper.py
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Configuration
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Environment Variables
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+- `SCRAPE_ALL=true` - Scrape all available pages (default)
+- `NUM_PAGES=10` - Scrape specific number of pages
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Docker Configuration
 
-## Learn More
+Edit `docker-compose.yml`:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```yaml
+environment:
+  - SCRAPE_ALL=true  # Scrape all pages
+  # - NUM_PAGES=5    # Or scrape 5 pages
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Local Configuration
 
-### Code Splitting
+```bash
+# Scrape all pages (default)
+python scraper.py
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+# Scrape specific number of pages
+NUM_PAGES=5 python scraper.py
 
-### Analyzing the Bundle Size
+# Scrape only 3 pages
+SCRAPE_ALL=false NUM_PAGES=3 python scraper.py
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Output Fields
 
-### Making a Progressive Web App
+The CSV contains the following fields:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+- `listing_id` - Unique listing identifier
+- `url` - Listing page URL
+- `title` - Property title
+- `price` - Price in AZN
+- `property_type` - Type (Köhnə tikili, Yeni tikili, etc.)
+- `city` - City/location
+- `location` - Detailed location
+- `document` - Document type (Kupça, etc.)
+- `floor` - Floor number/total floors
+- `area` - Area in m²
+- `land_area` - Land area in sot (if applicable)
+- `rooms` - Number of rooms
+- `mortgage` - Mortgage availability
+- `furnished` - Furnishing status
+- `description` - Property description
+- `seller_name` - Seller name
+- `seller_type` - Seller type (Sahibindən, Vasitəçi)
+- `phone` - Contact phone number
+- `views` - Number of views
+- `post_date` - Original post date
+- `update_date` - Last update date
 
-### Advanced Configuration
+## Notes
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- The scraper implements rate limiting to be respectful to the server
+- Pages are numbered with 24 listings each (page 0, 24, 48, ...)
+- Phone numbers are fetched via separate API calls
+- Output is saved in UTF-8 encoding for proper character support
 
-### Deployment
+## License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+MIT

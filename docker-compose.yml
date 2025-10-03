@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  scraper:
+    build: .
+    container_name: evv_az_scraper
+    volumes:
+      - ./output:/app/output
+    environment:
+      # Set SCRAPE_ALL=true to scrape all pages (default)
+      # Or set NUM_PAGES to scrape specific number of pages
+      - SCRAPE_ALL=true
+      # - NUM_PAGES=3
+    restart: "no"
